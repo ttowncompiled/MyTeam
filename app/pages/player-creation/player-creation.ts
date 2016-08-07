@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams } from 'ionic-angular';
 import { Team } from '../../providers/my-data/my-data';
+import { CapitalCasePipe } from '../../pipes/capital-case';
+
 /*
   Generated class for the PlayerCreationPage page.
 
@@ -9,6 +11,7 @@ import { Team } from '../../providers/my-data/my-data';
 */
 @Component({
   templateUrl: 'build/pages/player-creation/player-creation.html',
+  pipes: [ CapitalCasePipe ]
 })
 export class PlayerCreationPage {
 

@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { NavController, NavParams } from 'ionic-angular';
 import { MyData, AuthState, Team } from '../../providers/my-data/my-data';
 import { PlayerCreationPage } from '../player-creation/player-creation';
+import { CapitalCasePipe } from '../../pipes/capital-case';
+
 /*
   Generated class for the PlayerSignInPage page.
 
@@ -10,6 +12,7 @@ import { PlayerCreationPage } from '../player-creation/player-creation';
 */
 @Component({
   templateUrl: 'build/pages/player-sign-in/player-sign-in.html',
+  pipes: [ CapitalCasePipe ]
 })
 export class PlayerSignInPage {
 
