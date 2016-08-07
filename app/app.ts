@@ -2,7 +2,13 @@ import {Component} from '@angular/core';
 import {Platform, ionicBootstrap} from 'ionic-angular';
 import {StatusBar} from 'ionic-native';
 import {LoginPage} from './pages/login/login';
-import {FIREBASE_PROVIDERS, defaultFirebase} from 'angularfire2';
+import {
+  FIREBASE_PROVIDERS,
+  defaultFirebase,
+  firebaseAuthConfig,
+  AuthProviders,
+  AuthMethods
+} from 'angularfire2';
 
 @Component({
   template: '<ion-nav [root]="rootPage"></ion-nav>'
@@ -29,5 +35,9 @@ ionicBootstrap(MyApp, [
     authDomain: "myteam-72db4.firebaseapp.com",
     databaseURL: "https://myteam-72db4.firebaseio.com",
     storageBucket: "myteam-72db4.appspot.com"
+  }),
+  firebaseAuthConfig({
+    provider: AuthProviders.Password,
+    method: AuthMethods.Password
   })
 ]);

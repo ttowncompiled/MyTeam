@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController } from 'ionic-angular';
-import { AngularFire, FirebaseListObservable } from 'angularfire2';
+import { AngularFire, FirebaseAuthState } from 'angularfire2';
+import { FormControl } from '@angular/forms';
 
 /*
   Generated class for the LoginPage page.
@@ -13,9 +14,17 @@ import { AngularFire, FirebaseListObservable } from 'angularfire2';
 })
 export class LoginPage {
 
-  constructor(private navCtrl: NavController, public af: AngularFire) {
-    af.database.list('items').subscribe((items: any[]) => {
-      console.log(items);
+  email: FormControl = new FormControl('');
+  password: FormControl = new FormControl('');
+
+  constructor(private navCtrl: NavController, public af: AngularFire) {}
+
+  onSignIn(value: any): void {
+    console.log(value);
+    this.af.auth.login(value).then((a: FirebaseAuthState) => {
+      console.log(a);
+    }, (a: Object) => {
+      console.log(a);
     });
   }
 

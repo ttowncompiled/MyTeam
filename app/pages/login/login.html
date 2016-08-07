@@ -15,23 +15,25 @@
 
 <ion-content padding>
 
-  <ion-list>
+  <form #f="ngForm" (ngSubmit)="onSignIn(f.value)">
+    <ion-list>
 
-    <ion-item>
-      <ion-label floating>Email</ion-label>
-      <ion-input type="text"></ion-input>
-    </ion-item>
+      <ion-item>
+        <ion-label floating>Email</ion-label>
+        <ion-input type="text" name="email" ngModel></ion-input>
+      </ion-item>
 
-    <ion-item>
-      <ion-label floating>Password</ion-label>
-      <ion-input type="password"></ion-input>
-    </ion-item>
+      <ion-item>
+        <ion-label floating>Password</ion-label>
+        <ion-input type="password" name="password" ngModel></ion-input>
+      </ion-item>
 
-  </ion-list>
+    </ion-list>
 
-  <div padding>
-    <button block>Sign In</button>
-  </div>
+    <div padding>
+      <button type="submit" block>Sign In</button>
+    </div>
+  </form>
 
   <div padding>
     <button block>Join Team</button>
