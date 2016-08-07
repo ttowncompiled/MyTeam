@@ -9,6 +9,7 @@ import {
   AuthProviders,
   AuthMethods
 } from 'angularfire2';
+import {MyData} from './providers/my-data/my-data';
 
 @Component({
   template: '<ion-nav [root]="rootPage"></ion-nav>'
@@ -39,5 +40,6 @@ ionicBootstrap(MyApp, [
   firebaseAuthConfig({
     provider: AuthProviders.Password,
     method: AuthMethods.Password
-  })
+  }),
+  MyData
 ]);
