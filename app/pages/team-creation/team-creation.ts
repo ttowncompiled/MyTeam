@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController } from 'ionic-angular';
+import { MyData, Team } from '../../providers/my-data/my-data';
+import { PlayerCreationPage } from '../player-creation/player-creation';
 
 /*
   Generated class for the TeamCreationPage page.
@@ -12,10 +14,12 @@ import { NavController } from 'ionic-angular';
 })
 export class TeamCreationPage {
 
-  constructor(private navCtrl: NavController) {}
+  constructor(private navCtrl: NavController, public db: MyData) {}
 
   onSubmit(form: any): void {
-    
+    this.db.addTeam(form['teamName']).then((team: Team) => {
+      this.navCtrl.push(PlayerCreationPage, { 'team': team, 'isAdmin': true });
+    });
   }
 
 }

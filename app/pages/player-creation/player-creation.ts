@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams } from 'ionic-angular';
-
+import { Team } from '../../providers/my-data/my-data';
 /*
   Generated class for the PlayerCreationPage page.
 
@@ -12,10 +12,13 @@ import { NavController, NavParams } from 'ionic-angular';
 })
 export class PlayerCreationPage {
 
-  teamName: string;
+  team: Team;
+  isAdmin: string;
 
   constructor(private navCtrl: NavController, navParams: NavParams) {
-    this.teamName = navParams.get('team-name');
+    var { team, isAdmin } = navParams.data;
+    this.team = team;
+    this.isAdmin = isAdmin;
   }
 
 }

@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController } from 'ionic-angular';
 import { PlayerSignInPage } from '../player-sign-in/player-sign-in';
-
+import { MyData, Team } from '../../providers/my-data/my-data';
 /*
   Generated class for the TeamSignInPage page.
 
@@ -13,10 +13,14 @@ import { PlayerSignInPage } from '../player-sign-in/player-sign-in';
 })
 export class TeamSignInPage {
 
-  constructor(private navCtrl: NavController) {}
+  constructor(private navCtrl: NavController, public db: MyData) {}
 
   onSubmit(form: any): void {
-    this.navCtrl.push(PlayerSignInPage, form);
+    this.db.checkTeamExists(form['teamName']).then((team: Team) => {
+      if (team.name != '') {
+        this.navCtrl.push(PlayerSignInPage, team);
+      }
+    });
   }
 
 }

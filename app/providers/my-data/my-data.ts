@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { AngularFire, FirebaseAuthState } from 'angularfire2';
+import { Injectable, Inject } from '@angular/core';
+import { AngularFire, FirebaseAuthState, FirebaseApp } from 'angularfire2';
 import 'rxjs/add/operator/map';
 
 export interface Creds {
@@ -13,7 +13,8 @@ export interface AuthState {
 }
 
 export interface Team {
-
+  teamID: string;
+  name: string;
 }
 
 export interface Player {
@@ -24,7 +25,8 @@ export abstract class Database {
   abstract isUserAuthed(): Promise<AuthState>;
   abstract auth(creds: Creds): Promise<AuthState>;
   abstract unauth();
-  abstract addTeam();
+  abstract checkTeamExists(teamName: string): Promise<Team>;
+  abstract addTeam(teamName: string): Promise<Team>;
   abstract addPlayer();
 }
 
@@ -37,7 +39,7 @@ export abstract class Database {
 @Injectable()
 export class MyData extends Database {
 
-  constructor(public af: AngularFire) {
+  constructor(public af: AngularFire, @Inject(FirebaseApp) public fb: any) {
     super();
   }
 
@@ -63,12 +65,49 @@ export class MyData extends Database {
 
   }
 
-  addTeam() {
+  checkTeamExists(teamName: string): Promise<Team> {
+    return new Promise<Team>((resolve: any, reject: any) => {
+      this.fb.database().ref('/teams').once('value').then((snap: any) => {
+        if (snap == null || snap.val() == null) {
+          resolve({ teamID: '', name: '' });
+        } else {
+          var teams: Team[] = Object.keys(snap.val()).map((teamID: string) => snap.val()[teamID]);
+          teams = teams.filter((team: Team) => team.name == teamName);
+          if (teams.length == 0) {
+            resolve({ teamID: '', name: '' });
+          } else {
+            resolve(teams[0]);
+          }
+        }
+      });
+    });
+  }
 
+  addTeam(teamName: string): Promise<Team> {
+    return new Promise<Team>((resolve: any, reject: any) => {
+      this.checkTeamExists(teamName).then((t: Team) => {
+        if (t.teamID != '') {
+          reject(t);
+        } else {
+          var { ref, teamID } = this.newTeamRef();
+          var team: Team = { teamID: teamID, name: teamName };
+          ref.set(team).then(() => {
+            resolve(team);
+          });
+        }
+      });
+    });
   }
 
   addPlayer() {
 
+  }
+
+  private newTeamRef(): { ref: any, teamID: string } {
+    var ref: any = this.fb.database().ref('/teams').push();
+    var parts: string[] = (<string> ref.toString()).split('/');
+    var teamID: string = parts[parts.length-1];
+    return { ref: ref, teamID: teamID };
   }
 
 }

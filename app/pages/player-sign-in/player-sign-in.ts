@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams } from 'ionic-angular';
-import { MyData, AuthState } from '../../providers/my-data/my-data';
+import { MyData, AuthState, Team } from '../../providers/my-data/my-data';
 import { PlayerCreationPage } from '../player-creation/player-creation';
 /*
   Generated class for the PlayerSignInPage page.
@@ -13,18 +13,16 @@ import { PlayerCreationPage } from '../player-creation/player-creation';
 })
 export class PlayerSignInPage {
 
-  teamName: string;
+  team: Team;
   playerCreationPage: any = PlayerCreationPage;
 
   constructor(private navCtrl: NavController, public db: MyData, navParams: NavParams) {
-    this.teamName = navParams.get('team-name');
+    this.team = navParams.data;
   }
 
   onSubmit(form: any): void {
     this.db.auth(form).then((a: AuthState) => {
       console.log(a);
-    }).catch((a: AuthState) => {
-      console.error(a);
     });
   }
 
