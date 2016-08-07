@@ -13,9 +13,7 @@ import { PlayerSignInPage } from '../player-sign-in/player-sign-in';
 })
 export class TeamSignInPage {
 
-  constructor(private navCtrl: NavController) {
-
-  }
+  constructor(private navCtrl: NavController) {}
 
   onSubmit(form: any): void {
     this.navCtrl.push(PlayerSignInPage, form);
