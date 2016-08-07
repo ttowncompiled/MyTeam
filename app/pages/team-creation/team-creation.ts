@@ -14,4 +14,8 @@ export class TeamCreationPage {
 
   constructor(private navCtrl: NavController) {}
 
+  onSubmit(form: any): void {
+    
+  }
+
 }

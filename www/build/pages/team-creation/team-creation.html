@@ -15,4 +15,21 @@
 
 <ion-content padding>
 
+  <form #f="ngForm" (ngSubmit)="onSubmit(f.value)">
+
+    <ion-list>
+
+      <ion-item>
+        <ion-label floating>Team Name</ion-label>
+        <ion-input type="text" name="team-name" ngModel></ion-input>
+      </ion-item>
+
+    </ion-list>
+
+    <div padding>
+      <button type="submit" block>Continue <ion-icon name="arrow-round-forward"></ion-icon></button>
+    </div>
+
+  </form>
+
 </ion-content>

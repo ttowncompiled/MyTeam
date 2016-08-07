@@ -7,7 +7,7 @@
 <ion-header>
 
   <ion-navbar>
-    <ion-title>MyTeam</ion-title>
+    <ion-title>{{ teamName }}</ion-title>
   </ion-navbar>
 
 </ion-header>
@@ -34,5 +34,9 @@
       <button type="submit" block>Sign In</button>
     </div>
   </form>
+
+  <div padding>
+    <button type="submit" [navPush]="playerCreationPage" [navParams]="{ 'team-name': teamName }" block>I'm a New Player</button>
+  </div>
 
 </ion-content>

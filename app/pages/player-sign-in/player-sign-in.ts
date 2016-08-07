@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams } from 'ionic-angular';
 import { AngularFire, FirebaseAuthState } from 'angularfire2';
-
+import { PlayerCreationPage } from '../player-creation/player-creation';
 /*
   Generated class for the PlayerSignInPage page.
 
@@ -14,6 +14,7 @@ import { AngularFire, FirebaseAuthState } from 'angularfire2';
 export class PlayerSignInPage {
 
   teamName: string;
+  playerCreationPage: any = PlayerCreationPage;
 
   constructor(private navCtrl: NavController, public af: AngularFire, navParams: NavParams) {
     this.teamName = navParams.get('team-name');
