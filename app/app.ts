@@ -1,7 +1,7 @@
 import {Component} from '@angular/core';
 import {Platform, ionicBootstrap} from 'ionic-angular';
 import {StatusBar} from 'ionic-native';
-import {LoginPage} from './pages/login/login';
+import {LandingPage} from './pages/landing/landing';
 import {
   FIREBASE_PROVIDERS,
   defaultFirebase,
@@ -18,7 +18,7 @@ export class MyApp {
   private rootPage: any;
 
   constructor(private platform: Platform) {
-    this.rootPage = LoginPage;
+    this.rootPage = LandingPage;
 
     platform.ready().then(() => {
       // Okay, so the platform is ready and our plugins are available.
