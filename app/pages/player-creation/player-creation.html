@@ -15,4 +15,51 @@
 
 <ion-content padding>
 
+  <form #f="ngForm" (ngSubmit)="onSubmit(f.value)">
+
+    <ion-list>
+
+      <ion-item>
+        <ion-label inline>First Name</ion-label>
+        <ion-input type="text" name="firstName" ngModel required></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label inline>Last Name</ion-label>
+        <ion-input type="text" name="lastName" ngModel required></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>DOB</ion-label>
+        <ion-input type="date" name="dob" ngModel required></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Phone</ion-label>
+        <ion-input type="number" name="phone" ngModel required></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label inline>Email</ion-label>
+        <ion-input type="email" name="email" ngModel required></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label inline>Password</ion-label>
+        <ion-input type="password" name="password" ngModel required></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label inline>Confirm</ion-label>
+        <ion-input type="password" name="confirm" ngModel required></ion-input>
+      </ion-item>
+
+    </ion-list>
+
+    <div padding>
+      <button type="submit" block>Submit</button>
+    </div>
+
+  </form>
+
 </ion-content>

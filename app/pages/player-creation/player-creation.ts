@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams } from 'ionic-angular';
-import { Team } from '../../providers/my-data/my-data';
+import { MyData, PlayerStamp, Team } from '../../providers/my-data/my-data';
 import { CapitalCasePipe } from '../../pipes/capital-case';
 
 /*
@@ -18,10 +18,20 @@ export class PlayerCreationPage {
   team: Team;
   isAdmin: string;
 
-  constructor(private navCtrl: NavController, navParams: NavParams) {
-    var { team, isAdmin } = navParams.data;
+  constructor(private navCtrl: NavController, public db: MyData, navParams: NavParams) {
+    let { team, isAdmin } = navParams.data;
     this.team = team;
     this.isAdmin = isAdmin;
+  }
+
+  onSubmit(form: any): void {
+    console.log(form);
+    if (form['password'] == form['confirm']) {
+      delete form['confirm'];
+      form['phone'] = `(${form['phone'].substring(0, 3)}) ${form['phone'].substring(3, 6)}-${form['phone'].substring(6)}`;
+      form['teamID'] = this.team.teamID;
+      this.db.addPlayer(form).then((player: PlayerStamp) => console.log(player));
+    }
   }
 
 }

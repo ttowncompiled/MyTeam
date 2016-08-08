@@ -17,8 +17,18 @@ export interface Team {
   name: string;
 }
 
-export interface Player {
+export interface PlayerRegistration {
+  firstName: string;
+  lastName: string;
+  dob: string;
+  phone: string;
+  email: string;
+  password: string;
+}
 
+export interface PlayerStamp {
+  playerID: string;
+  name: string;
 }
 
 export abstract class Database {
@@ -27,7 +37,7 @@ export abstract class Database {
   abstract unauth();
   abstract checkTeamExists(teamName: string): Promise<Team>;
   abstract addTeam(teamName: string): Promise<Team>;
-  abstract addPlayer();
+  abstract addPlayer(player: PlayerRegistration): Promise<PlayerStamp>;
 }
 
 /*
@@ -71,7 +81,7 @@ export class MyData extends Database {
         if (snap == null || snap.val() == null) {
           resolve({ teamID: '', name: '' });
         } else {
-          var teams: Team[] = Object.keys(snap.val()).map((teamID: string) => snap.val()[teamID]);
+          let teams: Team[] = Object.keys(snap.val()).map((teamID: string) => snap.val()[teamID]);
           teams = teams.filter((team: Team) => team.name == teamName);
           if (teams.length == 0) {
             resolve({ teamID: '', name: '' });
@@ -89,8 +99,8 @@ export class MyData extends Database {
         if (t.teamID != '') {
           reject(t);
         } else {
-          var { ref, teamID } = this.newTeamRef();
-          var team: Team = { teamID: teamID, name: teamName };
+          let { ref, teamID } = this.newTeamRef();
+          let team: Team = { teamID: teamID, name: teamName };
           ref.set(team).then(() => {
             resolve(team);
           });
@@ -99,15 +109,32 @@ export class MyData extends Database {
     });
   }
 
-  addPlayer() {
-
+  addPlayer(registration: PlayerRegistration): Promise<PlayerStamp> {
+    return new Promise<PlayerStamp>((resolve: any, reject: any) => {
+      let { ref, playerID } = this.newPlayerRef();
+      let stamp: PlayerStamp = { playerID: playerID, name: registration.firstName };
+      let info: any = registration;
+      info['playerID'] = playerID;
+      ref.set(stamp).then(() => {
+        this.fb.database().ref(`/info/${playerID}`).set(info, () => {
+          resolve(stamp);
+        });
+      });
+    });
   }
 
   private newTeamRef(): { ref: any, teamID: string } {
-    var ref: any = this.fb.database().ref('/teams').push();
-    var parts: string[] = (<string> ref.toString()).split('/');
-    var teamID: string = parts[parts.length-1];
+    let ref: any = this.fb.database().ref('/teams').push();
+    let parts: string[] = (<string> ref.toString()).split('/');
+    let teamID: string = parts[parts.length-1];
     return { ref: ref, teamID: teamID };
+  }
+
+  private newPlayerRef(): { ref: any, playerID: string } {
+    let ref: any = this.fb.database().ref('/players').push();
+    let parts: string[] = (<string> ref.toString()).split('/');
+    let playerID: string = parts[parts.length-1];
+    return { ref: ref, playerID: playerID };
   }
 
 }
