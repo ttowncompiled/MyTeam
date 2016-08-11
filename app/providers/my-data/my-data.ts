@@ -3,19 +3,22 @@ import { FirebaseAuthState, FirebaseApp } from 'angularfire2';
 import { Observable, Subscriber } from 'rxjs';
 import 'rxjs/add/operator/map';
 
+export type TeamID = string;
+export type PlayerID = string;
+
 export interface AuthState {
-  playerID: string;
+  playerID: PlayerID;
 }
 
 export interface Team {
-  teamID: string;
+  teamID: TeamID;
   name: string;
 }
 
 export interface Player {
-  playerID: string;
+  playerID: PlayerID;
   email: string;
-  teamID: string;
+  teamID: TeamID;
 }
 
 export interface Registration {
@@ -25,12 +28,12 @@ export interface Registration {
   phone: string;
   email: string;
   password: string;
-  teamID: string;
+  confirm: string;
+  teamID: TeamID;
 }
 
-export interface Stamp {
-  playerID: string;
-  teamID: string;
+export interface Roster {
+  players: PlayerID[];
 }
 
 export interface Profile {
@@ -47,8 +50,8 @@ export abstract class Database {
   abstract auth(email: string, password: string): Promise<AuthState>;
   abstract unauth(): Promise<boolean>;
   abstract createNewTeam(name: string): Observable<Team>;
-  abstract checkIfPlayerExists(teamID: string, email: string): Promise<boolean>;
-  abstract createNewPlayer(player: Registration): Promise<Stamp>;
+  abstract checkIfPlayerExists(teamID: TeamID, email: string): Promise<boolean>;
+  abstract createNewPlayer(reg: Registration): Observable<Player>;
 }
 
 /*
@@ -62,6 +65,8 @@ export class MyData extends Database {
 
   static VAL: string = 'value';
   static PLAYERS: string = '/players';
+  static PROFILE: string = '/profile';
+  static ROSTER: string = '/roster';
   static TEAMS: string = '/teams';
 
   constructor(@Inject(FirebaseApp) public fb: firebase.app.App) {
@@ -71,15 +76,8 @@ export class MyData extends Database {
   private newTeamRef(): { ref: firebase.database.ThenableReference, teamID: string } {
     let ref: firebase.database.ThenableReference = this.fb.database().ref(MyData.TEAMS).push();
     let parts: string[] = ref.toString().split('/');
-    let teamID: string = parts[parts.length-1];
+    let teamID: TeamID = parts[parts.length-1];
     return { ref: ref, teamID: teamID };
-  }
-
-  private newPlayerRef(): { ref: any, playerID: string } {
-    let ref: any = this.fb.database().ref('/players').push();
-    let parts: string[] = (<string> ref.toString()).split('/');
-    let playerID: string = parts[parts.length-1];
-    return { ref: ref, playerID: playerID };
   }
 
   isUserAuthed(): Observable<AuthState> {
@@ -100,8 +98,8 @@ export class MyData extends Database {
       .map<TeamsSnap>((snap: firebase.database.DataSnapshot) => snap ? (<TeamsSnap> snap.val()) : null)
       .flatMap<Team>((snap: TeamsSnap) => {
         if (!snap) return null;
-        return Observable.from<string>(Object.keys(snap))
-          .map<Team>((teamID: string) => snap[teamID])
+        return Observable.from<TeamID>(Object.keys(snap))
+          .map<Team>((teamID: TeamID) => snap[teamID])
           .filter((team: Team) => team.name == name)
           .toArray()
           .map<Team>((teams: Team[]) => teams.length == 1 ? teams[0] : null)
@@ -161,16 +159,49 @@ export class MyData extends Database {
       .then((players: Player[]) => players.length != 0);
   }
 
-  addPlayer(reg: Registration): Promise<PlayerStamp> {
-    return new Promise<PlayerStamp>((resolve: any, reject: any) => {
-      let { ref, playerID } = this.newPlayerRef();
-      let stamp: PlayerStamp = { playerID: playerID, teamID: reg.teamID };
-      let info: any = reg;
-      info['playerID'] = playerID;
-      ref.set(stamp).then(() => {
-        this.fb.database().ref(`/info/${playerID}`).set(info, () => {
-          resolve(stamp);
-        });
+  createNewPlayer(reg: Registration): Observable<Player> {
+    return Observable.fromPromise<Player>(
+        this.checkIfPlayerExists(reg.teamID, reg.email).then((exists: boolean) => {
+          if (exists) throw reg;
+          return this.fb.auth().createUserWithEmailAndPassword(reg.email, reg.password);
+        })
+        .then((user: firebase.User) => {
+          if (!user) throw reg;
+          return { playerID: user.uid, email: reg.email, teamID: reg.teamID };
+        })
+        .then((player: Player) => {
+          return this.fb.database()
+              .ref(`${MyData.PLAYERS}/${player.playerID}`)
+              .set(player)
+              .then(() => player);
+        })
+        .then((player: Player) => {
+          return this.fb.database()
+            .ref(`${MyData.ROSTER}/${player.teamID}/${player.playerID}`)
+            .set(player.playerID)
+            .then(() => player);
+        })
+        .then((player: Player) => {
+          let profile: Profile = {
+            firstName: reg.firstName,
+            lastName: reg.lastName,
+            dob: reg.dob,
+            phone: reg.phone,
+            email: reg.email
+          };
+          return this.fb.database()
+            .ref(`${MyData.PROFILE}/${player.playerID}`)
+            .set(profile)
+            .then(() => player);
+        })
+    )
+    .flatMap<Player>((player: Player) => {
+      return new Observable<Player>((subscriber: Subscriber<Player>) => {
+        this.fb.database()
+          .ref(`${MyData.PLAYERS}/${player.playerID}`)
+          .on(MyData.VAL, (snap: firebase.database.DataSnapshot) => {
+            subscriber.next(snap ? (<Player> snap.val()) : null);
+          });
       });
     });
   }
