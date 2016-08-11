@@ -15,17 +15,17 @@
 
 <ion-content padding>
 
-  <form #f="ngForm" (ngSubmit)="onSubmit(f.value)">
+  <form [formGroup]="signInForm" (ngSubmit)="onSubmit(signInForm.value)">
     <ion-list>
 
       <ion-item>
         <ion-label floating>Email</ion-label>
-        <ion-input type="text" name="email" ngModel></ion-input>
+        <ion-input type="email" name="email" [formControl]="signInForm.controls['email']" required></ion-input>
       </ion-item>
 
       <ion-item>
         <ion-label floating>Password</ion-label>
-        <ion-input type="password" name="password" ngModel></ion-input>
+        <ion-input type="password" name="password" [formControl]="signInForm.controls['password']" required></ion-input>
       </ion-item>
 
     </ion-list>

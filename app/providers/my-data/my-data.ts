@@ -54,6 +54,7 @@ export abstract class Database {
   abstract createNewTeam(name: string): Promise<Team>;
   abstract checkIfPlayerExists(teamID: TeamID, email: string): Promise<boolean>;
   abstract createNewPlayer(reg: Registration): Promise<Player>;
+  abstract getPlayer(playerID: PlayerID): Promise<Player>;
 }
 
 /*
@@ -112,7 +113,8 @@ export class MyData extends Database {
   auth(teamID: TeamID, email: string, password: string): Promise<AuthState> {
     return this.fb.auth()
       .signInWithEmailAndPassword(email, password)
-      .then((user: firebase.User) => user ? { playerID: user.uid } : null);
+      .then((user: firebase.User) => user ? { playerID: user.uid } : null)
+      .catch((reason: any) => null);
   }
 
   unauth(): Promise<boolean> {
@@ -129,7 +131,8 @@ export class MyData extends Database {
       .then((teamRef: TeamRef) => {
         let team: Team = { teamID: teamRef.teamID, name: name };
         return teamRef.ref.set(team).then(() => team);
-      });
+      })
+      .catch((reason: any) => null);
   }
 
   checkIfPlayerExists(teamID: string, email: string): Promise<boolean> {
@@ -180,7 +183,15 @@ export class MyData extends Database {
           .ref(`${MyData.PROFILE}/${player.playerID}`)
           .set(profile)
           .then(() => player);
-      });
+      })
+      .catch((reason: any) => null);
+  }
+
+  getPlayer(playerID: PlayerID): Promise<Player> {
+    return this.fb.database()
+      .ref(`${MyData.PLAYERS}/${playerID}`)
+      .once(MyData.VAL)
+      .then((snap: firebase.database.DataSnapshot) => snap ? (<Player> snap.val()) : null);
   }
 
 }

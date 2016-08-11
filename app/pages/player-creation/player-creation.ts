@@ -1,8 +1,10 @@
 import { Component } from '@angular/core';
-import { NavController, NavParams } from 'ionic-angular';
+import { AlertController, NavController, NavParams } from 'ionic-angular';
 import { Database, Player, Registration, Team, TeamID } from '../../providers/my-data/my-data';
 import { Observable } from 'rxjs';
 import { CapitalCasePipe } from '../../pipes/capital-case';
+import { HomePage } from '../home/home';
+import { PlayerSignInPage } from '../player-sign-in/player-sign-in';
 
 interface Form {
   firstName: string;
@@ -30,7 +32,7 @@ export class PlayerCreationPage {
   isAdmin: boolean;
   teamName: Observable<string>;
 
-  constructor(private navCtrl: NavController, public db: Database, params: NavParams) {
+  constructor(private alertCtrl: AlertController, private navCtrl: NavController, public db: Database, params: NavParams) {
     console.log('player-creation', 'constructor', '>>>', params.data);
     this.teamID = (<TeamID> params.get('teamID'));
     this.isAdmin = (<boolean> params.get('isAdmin'));
@@ -52,15 +54,36 @@ export class PlayerCreationPage {
       };
       this.db.createNewPlayer(reg).then((player: Player) => {
         console.log('player-creation', 'onSubmit', '>>>', player);
-        if (player) {
-          // direct the user to their home page
-        } else {
-          // inform user that the requested player could not be created
-        }
+        if (player) this.navCtrl.push(HomePage, player);
+        else this.alertThatEmailIsInUse(reg.teamID, reg.email);
       });
-    } else {
-      // inform user that the password and confirmation don't match
-    }
+    } else this.alertThatPasswordsDontMatch();
+  }
+
+  alertThatPasswordsDontMatch(): void {
+    this.alertCtrl.create({
+      title: "Passwords Don't Match!",
+      message: 'Please re-enter your Password.',
+      buttons: ['TRY AGAIN']
+    })
+    .present();
+  }
+
+  alertThatEmailIsInUse(teamID: TeamID, email: string): void {
+    this.alertCtrl.create({
+      title: 'Email already in Use!',
+      message: 'Would you like to sign in?',
+      buttons: [
+        {
+          text: 'NO'
+        },
+        {
+          text: 'YES',
+          handler: () => this.navCtrl.push(PlayerSignInPage, { teamID: teamID, email: email })
+        }
+      ]
+    })
+    .present();
   }
 
 }

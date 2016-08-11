@@ -2,7 +2,8 @@ import { Component } from '@angular/core';
 import { NavController } from 'ionic-angular';
 import { TeamSignInPage } from '../team-sign-in/team-sign-in';
 import { TeamCreationPage } from '../team-creation/team-creation';
-import { AuthState, Database } from '../../providers/my-data/my-data';
+import { AuthState, Database, Player } from '../../providers/my-data/my-data';
+import { HomePage } from '../home/home';
 
 /*
   Generated class for the LandingPage page.
@@ -22,7 +23,8 @@ export class LandingPage {
     this.db.isUserAuthed().then((a: AuthState) => {
       console.log('landing', 'constructor', '>>>', a);
       if (a) {
-        // direct user to their home page
+        this.db.getPlayer(a.playerID)
+          .then((player: Player) => this.navCtrl.push(HomePage, player));
       }
     });
   }
