@@ -12,6 +12,12 @@ export interface Team {
   name: string;
 }
 
+export interface Player {
+  playerID: string;
+  email: string;
+  teamID: string;
+}
+
 export interface Registration {
   firstName: string;
   lastName: string;
@@ -40,10 +46,9 @@ export abstract class Database {
   abstract checkIfTeamExists(name: string): Observable<Team>;
   abstract auth(email: string, password: string): Promise<AuthState>;
   abstract unauth(): Promise<boolean>;
-  abstract addTeam(teamName: string): Promise<TeamID>;
-  abstract getTeamName(teamID: string): Promise<string>;
-  abstract checkIfPlayerExists(teamID: string, email: string): Promise<Stamp>;
-  abstract addPlayer(player: Registration): Promise<Stamp>;
+  abstract createNewTeam(name: string): Observable<Team>;
+  abstract checkIfPlayerExists(teamID: string, email: string): Promise<boolean>;
+  abstract createNewPlayer(player: Registration): Promise<Stamp>;
 }
 
 /*
@@ -56,10 +61,25 @@ export abstract class Database {
 export class MyData extends Database {
 
   static VAL: string = 'value';
+  static PLAYERS: string = '/players';
   static TEAMS: string = '/teams';
 
   constructor(@Inject(FirebaseApp) public fb: firebase.app.App) {
     super();
+  }
+
+  private newTeamRef(): { ref: firebase.database.ThenableReference, teamID: string } {
+    let ref: firebase.database.ThenableReference = this.fb.database().ref(MyData.TEAMS).push();
+    let parts: string[] = ref.toString().split('/');
+    let teamID: string = parts[parts.length-1];
+    return { ref: ref, teamID: teamID };
+  }
+
+  private newPlayerRef(): { ref: any, playerID: string } {
+    let ref: any = this.fb.database().ref('/players').push();
+    let parts: string[] = (<string> ref.toString()).split('/');
+    let playerID: string = parts[parts.length-1];
+    return { ref: ref, playerID: playerID };
   }
 
   isUserAuthed(): Observable<AuthState> {
@@ -75,10 +95,11 @@ export class MyData extends Database {
   }
 
   checkIfTeamExists(name: string): Observable<Team> {
-    type TeamSnap = { [teamID: string]: Team };
-    return Observable.fromPromise<TeamSnap>(this.fb.database().ref(MyData.TEAMS).once(MyData.VAL))
-      .flatMap<Team>((snap: TeamSnap) => {
-        if (snap == null) return null;
+    type TeamsSnap = { [teamID: string]: Team };
+    return Observable.fromPromise<firebase.database.DataSnapshot>(this.fb.database().ref(MyData.TEAMS).once(MyData.VAL))
+      .map<TeamsSnap>((snap: firebase.database.DataSnapshot) => snap ? (<TeamsSnap> snap.val()) : null)
+      .flatMap<Team>((snap: TeamsSnap) => {
+        if (!snap) return null;
         return Observable.from<string>(Object.keys(snap))
           .map<Team>((teamID: string) => snap[teamID])
           .filter((team: Team) => team.name == name)
@@ -105,26 +126,39 @@ export class MyData extends Database {
     return this.fb.auth().signOut().then(() => true);
   }
 
-  addTeam(teamName: string): Promise<TeamStamp> {
-    return new Promise<TeamStamp>((resolve: any, reject: any) => {
-      this.checkIfTeamExists(teamName).then((t: TeamStamp) => {
-        if (t.teamID != '') {
-          reject(t);
-        } else {
-          let { ref, teamID } = this.newTeamRef();
-          let team: TeamStamp = { teamID: teamID, name: teamName };
-          ref.set(team).then(() => {
-            resolve(team);
+  createNewTeam(name: string): Observable<Team> {
+    type TeamRef = { ref: firebase.database.ThenableReference, teamID: string };
+    return Observable.fromPromise<Team>(this.checkIfTeamExists(name).toPromise())
+      .map<TeamRef>((team: Team) => {
+        if (!!team) throw team;
+        return this.newTeamRef();
+      })
+      .flatMap<TeamRef>((teamRef: TeamRef) => {
+        let team: Team = { teamID: teamRef.teamID, name: name };
+        return Observable.fromPromise<void>(teamRef.ref.set(team))
+          .map<TeamRef>(() => teamRef);
+      })
+      .flatMap<Team>((teamRef: TeamRef) => {
+        return new Observable<Team>((subscriber: Subscriber<Team>) => {
+          teamRef.ref.on(MyData.VAL, (snap: firebase.database.DataSnapshot) => {
+            subscriber.next(snap ? (<Team> snap.val()) : null);
           });
-        }
+        });
       });
-    });
   }
 
-  checkIfPlayerExists(teamID: string, email: string): Promise<PlayerStamp> {
-    return new Promise<PlayerStamp>((resolve: any, reject: any) => {
-
-    });
+  checkIfPlayerExists(teamID: string, email: string): Promise<boolean> {
+    type PlayerSnap = { [playerID: string]: Player };
+    return this.fb.database().ref(MyData.PLAYERS).once(MyData.VAL).then((snap: firebase.database.DataSnapshot) => {
+        return snap ? (<PlayerSnap> snap.val()) : null;
+      })
+      .then((snap: PlayerSnap) => {
+        if (!snap) return [];
+        return Object.keys(snap)
+          .map((playerID: string) => snap[playerID])
+          .filter((player: Player) => player.teamID == teamID && player.email == email);
+      })
+      .then((players: Player[]) => players.length != 0);
   }
 
   addPlayer(reg: Registration): Promise<PlayerStamp> {
@@ -139,20 +173,6 @@ export class MyData extends Database {
         });
       });
     });
-  }
-
-  private newTeamRef(): { ref: any, teamID: string } {
-    let ref: any = this.fb.database().ref('/teams').push();
-    let parts: string[] = (<string> ref.toString()).split('/');
-    let teamID: string = parts[parts.length-1];
-    return { ref: ref, teamID: teamID };
-  }
-
-  private newPlayerRef(): { ref: any, playerID: string } {
-    let ref: any = this.fb.database().ref('/players').push();
-    let parts: string[] = (<string> ref.toString()).split('/');
-    let playerID: string = parts[parts.length-1];
-    return { ref: ref, playerID: playerID };
   }
 
 }
