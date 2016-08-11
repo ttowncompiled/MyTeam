@@ -39,12 +39,8 @@ export class PlayerSignInPage {
       .then((a: AuthState) => {
         console.log('player-sign-in', 'onSubmit', '>>>', a);
         if (a) {
-          let player: Player = {
-            email: form.email,
-            playerID: a.playerID,
-            teamID: this.teamID
-          };
-          this.navCtrl.push(HomePage, player);
+          this.db.getPlayer(a.playerID)
+            .then((player: Player) => this.navCtrl.push(HomePage, player)); 
         }
         else this.alertThatAuthenticationFailed();
       });

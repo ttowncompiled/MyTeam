@@ -17,6 +17,7 @@ export interface Team {
 
 export interface Player {
   email: string;
+  isAdmin: boolean;
   playerID: PlayerID;
   teamID: TeamID;
 }
@@ -26,6 +27,7 @@ export interface Registration {
   dob: string;
   email: string;
   firstName: string;
+  isAdmin: boolean;
   lastName: string;
   password: string;
   phone: string;
@@ -157,7 +159,7 @@ export class MyData extends Database {
       })
       .then((user: firebase.User) => {
         if (!user) throw reg;
-        return { playerID: user.uid, email: reg.email, teamID: reg.teamID };
+        return { playerID: user.uid, email: reg.email, isAdmin: reg.isAdmin, teamID: reg.teamID };
       })
       .then((player: Player) => {
         return this.fb.database()

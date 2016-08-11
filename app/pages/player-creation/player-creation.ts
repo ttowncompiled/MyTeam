@@ -47,6 +47,7 @@ export class PlayerCreationPage {
         dob: form.dob,
         email: form.email,
         firstName: form.firstName,
+        isAdmin: this.isAdmin,
         lastName: form.lastName,
         password: form.password,
         phone: form.phone,
