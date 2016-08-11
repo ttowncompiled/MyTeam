@@ -1,15 +1,10 @@
 import { Injectable, Inject } from '@angular/core';
-import { AngularFire, FirebaseAuthState, FirebaseApp } from 'angularfire2';
+import { FirebaseAuthState, FirebaseApp } from 'angularfire2';
+import { Observable, Subscriber } from 'rxjs';
 import 'rxjs/add/operator/map';
 
-export interface Creds {
-  email: string;
-  password: string;
-}
-
 export interface AuthState {
-  isAuthed: boolean;
-  uid: string;
+  playerID: string;
 }
 
 export interface Team {
@@ -17,27 +12,38 @@ export interface Team {
   name: string;
 }
 
-export interface PlayerRegistration {
+export interface Registration {
   firstName: string;
   lastName: string;
   dob: string;
   phone: string;
   email: string;
   password: string;
+  teamID: string;
 }
 
-export interface PlayerStamp {
+export interface Stamp {
   playerID: string;
-  name: string;
+  teamID: string;
+}
+
+export interface Profile {
+  firstName: string;
+  lastName: string;
+  dob: string;
+  phone: string;
+  email: string;
 }
 
 export abstract class Database {
-  abstract isUserAuthed(): Promise<AuthState>;
-  abstract auth(creds: Creds): Promise<AuthState>;
-  abstract unauth();
-  abstract checkTeamExists(teamName: string): Promise<Team>;
-  abstract addTeam(teamName: string): Promise<Team>;
-  abstract addPlayer(player: PlayerRegistration): Promise<PlayerStamp>;
+  abstract isUserAuthed(): Observable<AuthState>;
+  abstract checkIfTeamExists(name: string): Observable<Team>;
+  abstract auth(email: string, password: string): Promise<AuthState>;
+  abstract unauth(): Promise<boolean>;
+  abstract addTeam(teamName: string): Promise<TeamID>;
+  abstract getTeamName(teamID: string): Promise<string>;
+  abstract checkIfPlayerExists(teamID: string, email: string): Promise<Stamp>;
+  abstract addPlayer(player: Registration): Promise<Stamp>;
 }
 
 /*
@@ -49,58 +55,68 @@ export abstract class Database {
 @Injectable()
 export class MyData extends Database {
 
-  constructor(public af: AngularFire, @Inject(FirebaseApp) public fb: any) {
+  static VAL: string = 'value';
+  static TEAMS: string = '/teams';
+
+  constructor(@Inject(FirebaseApp) public fb: firebase.app.App) {
     super();
   }
 
-  isUserAuthed(): Promise<AuthState> {
-    return new Promise<AuthState>((resolve: any, reject: any) => {
-      resolve({ isAuthed: false, uid: '' });
-    });
+  isUserAuthed(): Observable<AuthState> {
+    return Observable.merge<firebase.User>(
+        Observable.of<firebase.User>(this.fb.auth().currentUser),
+        new Observable<firebase.User>((subscriber: Subscriber<firebase.User>) => {
+          this.fb.auth().onAuthStateChanged((user: firebase.User) => {
+            subscriber.next(user);
+          });
+        })
+    )
+    .map<AuthState>((user: firebase.User) => user ? { playerID: user.uid } : null);
   }
 
-  auth(creds: Creds): Promise<AuthState> {
+  checkIfTeamExists(name: string): Observable<Team> {
+    type TeamSnap = { [teamID: string]: Team };
+    return Observable.fromPromise<TeamSnap>(this.fb.database().ref(MyData.TEAMS).once(MyData.VAL))
+      .flatMap<Team>((snap: TeamSnap) => {
+        if (snap == null) return null;
+        return Observable.from<string>(Object.keys(snap))
+          .map<Team>((teamID: string) => snap[teamID])
+          .filter((team: Team) => team.name == name)
+          .toArray()
+          .map<Team>((teams: Team[]) => teams.length == 1 ? teams[0] : null)
+          .flatMap<Team>((team: Team) => {
+            if (team == null) return null;
+            return new Observable<Team>((subscriber: Subscriber<Team>) => {
+              this.fb.database().ref(`${MyData.TEAMS}/${team.teamID}`).on(MyData.VAL, (snap: firebase.database.DataSnapshot) => {
+                subscriber.next(snap ? (<Team> snap.val()) : null);
+              });
+            });
+          });
+      });
+  }
+
+  auth(creds: Credentials): Promise<AuthState> {
     return new Promise<AuthState>((resolve: any, reject: any) => {
-      this.af.auth.login(creds).then((a: FirebaseAuthState) => {
+      this.fb.auth().signInWithEmailAndPassword(creds.email, creds.password).then((a: FirebaseAuthState) => {
         resolve({ isAuthed: true, uid: a.uid });
-      }, (a: Object) => {
-        reject({ isAuthed: false, uid: '' });
       }).catch((a: Object) => {
         reject({ isAuthed: false, uid: '' });
       });
     });
   }
 
-  unauth() {
-
+  unauth(): void {
+    this.fb.auth().signOut();
   }
 
-  checkTeamExists(teamName: string): Promise<Team> {
-    return new Promise<Team>((resolve: any, reject: any) => {
-      this.fb.database().ref('/teams').once('value').then((snap: any) => {
-        if (snap == null || snap.val() == null) {
-          resolve({ teamID: '', name: '' });
-        } else {
-          let teams: Team[] = Object.keys(snap.val()).map((teamID: string) => snap.val()[teamID]);
-          teams = teams.filter((team: Team) => team.name == teamName);
-          if (teams.length == 0) {
-            resolve({ teamID: '', name: '' });
-          } else {
-            resolve(teams[0]);
-          }
-        }
-      });
-    });
-  }
-
-  addTeam(teamName: string): Promise<Team> {
-    return new Promise<Team>((resolve: any, reject: any) => {
-      this.checkTeamExists(teamName).then((t: Team) => {
+  addTeam(teamName: string): Promise<TeamStamp> {
+    return new Promise<TeamStamp>((resolve: any, reject: any) => {
+      this.checkIfTeamExists(teamName).then((t: TeamStamp) => {
         if (t.teamID != '') {
           reject(t);
         } else {
           let { ref, teamID } = this.newTeamRef();
-          let team: Team = { teamID: teamID, name: teamName };
+          let team: TeamStamp = { teamID: teamID, name: teamName };
           ref.set(team).then(() => {
             resolve(team);
           });
@@ -109,11 +125,17 @@ export class MyData extends Database {
     });
   }
 
-  addPlayer(registration: PlayerRegistration): Promise<PlayerStamp> {
+  checkIfPlayerExists(teamID: string, email: string): Promise<PlayerStamp> {
+    return new Promise<PlayerStamp>((resolve: any, reject: any) => {
+
+    });
+  }
+
+  addPlayer(reg: Registration): Promise<PlayerStamp> {
     return new Promise<PlayerStamp>((resolve: any, reject: any) => {
       let { ref, playerID } = this.newPlayerRef();
-      let stamp: PlayerStamp = { playerID: playerID, name: registration.firstName };
-      let info: any = registration;
+      let stamp: PlayerStamp = { playerID: playerID, teamID: reg.teamID };
+      let info: any = reg;
       info['playerID'] = playerID;
       ref.set(stamp).then(() => {
         this.fb.database().ref(`/info/${playerID}`).set(info, () => {
