@@ -95,18 +95,14 @@ export class MyData extends Database {
       });
   }
 
-  auth(creds: Credentials): Promise<AuthState> {
-    return new Promise<AuthState>((resolve: any, reject: any) => {
-      this.fb.auth().signInWithEmailAndPassword(creds.email, creds.password).then((a: FirebaseAuthState) => {
-        resolve({ isAuthed: true, uid: a.uid });
-      }).catch((a: Object) => {
-        reject({ isAuthed: false, uid: '' });
-      });
+  auth(email: string, password: string): Promise<AuthState> {
+    return this.fb.auth().signInWithEmailAndPassword(email, password).then((user: firebase.User) => {
+      return user ? { playerID: user.uid } : null;
     });
   }
 
-  unauth(): void {
-    this.fb.auth().signOut();
+  unauth(): Promise<boolean> {
+    return this.fb.auth().signOut().then(() => true);
   }
 
   addTeam(teamName: string): Promise<TeamStamp> {
