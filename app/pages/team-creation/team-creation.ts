@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController } from 'ionic-angular';
-import { MyData, Team } from '../../providers/my-data/my-data';
+import { Database, Team } from '../../providers/my-data/my-data';
 import { PlayerCreationPage } from '../player-creation/player-creation';
 
 /*
@@ -14,12 +14,15 @@ import { PlayerCreationPage } from '../player-creation/player-creation';
 })
 export class TeamCreationPage {
 
-  constructor(private navCtrl: NavController, public db: MyData) {}
+  constructor(private navCtrl: NavController, public db: Database) {}
 
-  onSubmit(form: any): void {
-    var teamName: string = (<string> form['teamName']).toLowerCase();
-    this.db.addTeam(teamName).then((team: Team) => {
-      this.navCtrl.push(PlayerCreationPage, { 'team': team, 'isAdmin': true });
+  onSubmit(form: { teamName: string }): void {
+    this.db.createNewTeam(form.teamName).then((team: Team) => {
+      console.log('team-creation', 'onSubmit', '>>>', team);
+      if (team) this.navCtrl.push(PlayerCreationPage, { teamID: team.teamID, isAdmin: true });
+      else {
+        // inform user that their team already exists
+      }
     });
   }
 

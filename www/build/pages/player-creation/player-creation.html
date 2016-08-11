@@ -7,7 +7,7 @@
 <ion-header>
 
   <ion-navbar>
-    <ion-title>{{ team.name | capitalCase }}</ion-title>
+    <ion-title>{{ teamName | async | capitalcase }}</ion-title>
   </ion-navbar>
 
 </ion-header>

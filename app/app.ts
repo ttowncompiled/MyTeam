@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, provide} from '@angular/core';
 import {Platform, ionicBootstrap} from 'ionic-angular';
 import {StatusBar} from 'ionic-native';
 import {LandingPage} from './pages/landing/landing';
@@ -9,7 +9,7 @@ import {
   AuthProviders,
   AuthMethods
 } from 'angularfire2';
-import {MyData} from './providers/my-data/my-data';
+import {Database, MyData} from './providers/my-data/my-data';
 
 @Component({
   template: '<ion-nav [root]="rootPage"></ion-nav>'
@@ -41,5 +41,5 @@ ionicBootstrap(MyApp, [
     provider: AuthProviders.Password,
     method: AuthMethods.Password
   }),
-  MyData
+  provide(Database, { useClass: MyData })
 ]);
