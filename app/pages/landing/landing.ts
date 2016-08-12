@@ -20,13 +20,14 @@ export class LandingPage {
   teamCreationPage: any = TeamCreationPage;
 
   constructor(private navCtrl: NavController, public db: Database) {
-    this.db.isUserAuthed().then((a: AuthState) => {
-      console.log('landing', 'constructor', '>>>', a);
-      if (a) {
-        this.db.getPlayer(a.playerID)
-          .then((player: Player) => this.navCtrl.push(HomePage, player));
-      }
-    });
+    this.db.onAuthState()
+      .subscribe((a: AuthState) => {
+        console.log('landing', 'constructor', '>>>', a);
+        if (a) {
+          this.db.getPlayer(a.playerID)
+            .then((player: Player) => this.navCtrl.setRoot(HomePage, player));
+        }
+      });
   }
 
 }

@@ -55,7 +55,7 @@ export class PlayerCreationPage {
       };
       this.db.createNewPlayer(reg).then((player: Player) => {
         console.log('player-creation', 'onSubmit', '>>>', player);
-        if (player) this.navCtrl.push(HomePage, player);
+        if (player) this.navCtrl.setRoot(HomePage, player);
         else this.alertThatEmailIsInUse(reg.teamID, reg.email);
       });
     } else this.alertThatPasswordsDontMatch();

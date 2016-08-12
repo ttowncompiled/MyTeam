@@ -1,5 +1,9 @@
-import { Component } from '@angular/core';
-import { NavController } from 'ionic-angular';
+import { Component, ViewChild } from '@angular/core';
+import { NavController, Tabs } from 'ionic-angular';
+import { ProfilePage } from '../profile/profile';
+import { NewsPage } from '../news/news';
+import { RosterPage } from '../roster/roster';
+import { SeasonPage } from '../season/season';
 
 /*
   Generated class for the HomePage page.
@@ -12,8 +16,11 @@ import { NavController } from 'ionic-angular';
 })
 export class HomePage {
 
-  constructor(private navCtrl: NavController) {
+  profilePage: any = ProfilePage;
+  newsPage: any = NewsPage;
+  rosterPage: any = RosterPage;
+  seasonPage: any = SeasonPage;
 
-  }
+  constructor(private navCtrl: NavController) {}
 
 }

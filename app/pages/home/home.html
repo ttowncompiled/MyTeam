@@ -4,15 +4,10 @@
   See http://ionicframework.com/docs/v2/components/#navigation for more info on
   Ionic pages and navigation.
 -->
-<ion-header>
+<ion-tabs class="tabs-basic" >
+  <ion-tab tabTitle="Profile" [root]="profilePage" [rootParams]="{ 'tabID': 0 }"></ion-tab>
+  <ion-tab tabTitle="News" [root]="newsPage" [rootParams]="{ 'tabID': 1 }"></ion-tab>
+  <ion-tab tabTitle="Roster" [root]="rosterPage" [rootParams]="{ 'tabID': 2 }"></ion-tab>
+  <ion-tab tabTitle="Season" [root]="seasonPage" [rootParams]="{ 'tabID': 3 }"></ion-tab>
+</ion-tabs>
 
-  <ion-navbar>
-    <ion-title>home</ion-title>
-  </ion-navbar>
-
-</ion-header>
-
-
-<ion-content padding>
-
-</ion-content>

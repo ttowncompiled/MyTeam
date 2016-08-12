@@ -40,7 +40,7 @@ export class PlayerSignInPage {
         console.log('player-sign-in', 'onSubmit', '>>>', a);
         if (a) {
           this.db.getPlayer(a.playerID)
-            .then((player: Player) => this.navCtrl.push(HomePage, player)); 
+            .then((player: Player) => this.navCtrl.setRoot(HomePage, player)); 
         }
         else this.alertThatAuthenticationFailed();
       });

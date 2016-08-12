@@ -48,7 +48,7 @@ export interface Profile {
 
 @Injectable()
 export abstract class Database {
-  abstract isUserAuthed(): Promise<AuthState>;
+  abstract onAuthState(): Observable<AuthState>;
   abstract checkIfTeamExists(name: string): Promise<Team>;
   abstract onTeam(teamID: TeamID): Observable<Team>;
   abstract auth(teamID: TeamID, email: string, password: string): Promise<AuthState>;
@@ -84,9 +84,13 @@ export class MyData extends Database {
     return { ref: ref, teamID: teamID };
   }
 
-  isUserAuthed(): Promise<AuthState> {
-    return Promise.resolve(this.fb.auth().currentUser)
-      .then((user: firebase.User) => user ? { playerID: user.uid } : null)
+  onAuthState(): Observable<AuthState> {
+    return new Observable<AuthState>((subscriber: Subscriber<AuthState>) => {
+      this.fb.auth().onAuthStateChanged((user: firebase.User) => {
+        if (!user) subscriber.next(null);
+        else subscriber.next({ playerID: user.uid });
+      });
+    });
   }
 
   checkIfTeamExists(name: string): Promise<Team> {
